@@ -1,6 +1,6 @@
 # Pyde FEM
 
-**pyde_fem** is a Python package for mesh manipulation, a submodule of the larger pyde-fem project for Finite Element Method (FEM) analysis and solving Partial Differential Equations (PDEs) using the Galerkin method.
+**pyde_fem** is a Python package for mesh manipulation, a submodule of the larger pyde_fem project for Finite Element Method (FEM) analysis and solving Partial Differential Equations (PDEs) using the Galerkin method.
 
 ## Features
 

@@ -9,12 +9,12 @@ def main() -> None:
         description='Python package for Finite Element Method (FEM) for solving Partial Differential Equations (PDEs)',
         long_description=Path('README.md').read_text(),
         long_description_content_type='text/markdown',
-        url='https://github.com/RyanTmi/pyde-fem',
+        url='https://github.com/RyanTmi/pyde_fem',
         author='Ryan Timeus',
         author_email='timeusryan@gmail.com',
         license='Apache License 2.0',
         project_urls={
-            'Source': 'https://github.com/RyanTmi/pyde-fem',
+            'Source': 'https://github.com/RyanTmi/pyde_fem',
         },
         classifiers=[
             'Development Status :: 3 - Alpha',
