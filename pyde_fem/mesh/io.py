@@ -51,7 +51,7 @@ def load(mesh_file: str) -> tuple[np.ndarray, np.ndarray]:
     return vertices, indices
 
 
-def write_mesh(mesh_file: str, vertices: np.ndarray, indices: np.ndarray) -> None:
+def save(mesh_file: str, vertices: np.ndarray, indices: np.ndarray) -> None:
     try:
         with open(mesh_file, 'w') as f:
             f.write('$Noeuds\n')
