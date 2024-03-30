@@ -12,6 +12,24 @@ def plot(
     ccb: np.ndarray = None,
     values: np.ndarray = None
 ) -> None:
+    """
+    Plots a mesh with optional boundary information and function values.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        Array containing coordinates of mesh vertices.
+    indices : np.ndarray
+        Array containing indices of mesh elements.
+    indices_b : np.ndarray, optional
+        Array containing indices of boundary elements.
+    cc : np.ndarray, optional
+        Array containing labels for connected components of the mesh.
+    ccb : np.ndarray, optional
+        Array containing labels for connected components of the boundary.
+    values : np.ndarray, optional
+        Array containing solution values for plotting.
+    """
     if cc is None:
         cc = np.zeros_like(indices)
 

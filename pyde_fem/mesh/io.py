@@ -33,6 +33,21 @@ def load_elt(mesh_file: str) -> np.ndarray:
 
 
 def load(mesh_file: str) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Loads both vertex and element data from a mesh file.
+
+    Parameters
+    ----------
+    mesh_file : str
+        Name of the mesh file.
+
+    Returns
+    -------
+    vertices : np.ndarray
+        Array containing coordinates of mesh vertices.
+    indices : np.ndarray
+        Array containing indices of mesh elements.
+    """
     try:
         with open(mesh_file) as f:
             lines = f.readlines()
@@ -52,6 +67,18 @@ def load(mesh_file: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def save(mesh_file: str, vertices: np.ndarray, indices: np.ndarray) -> None:
+    """
+    Saves mesh data to a file.
+
+    Parameters
+    ----------
+    mesh_file : str
+        Name of the mesh file to save.
+    vertices : np.ndarray
+        Array containing coordinates of mesh vertices.
+    indices : np.ndarray
+        Array containing indices of mesh elements.
+    """
     try:
         with open(mesh_file, 'w') as f:
             f.write('$Noeuds\n')
