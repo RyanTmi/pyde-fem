@@ -10,8 +10,15 @@
 
 You can install `pyde_fem` using pip:
 
-```sh
-pip install pyde_fem
+```shell
+pip3 install pyde_fem
 ```
 
 ## Usage
+
+```python
+import pyde_fem as pf
+
+vertices, indices = pf.mesh.load('mesh.msh')
+pf.mesh.plot(vertices, indices)
+```

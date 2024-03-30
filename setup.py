@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 def main() -> None:
     setup(
         name='pyde_fem',
-        version='0.3.0',
+        version='0.3.1',
         description='Python package for Finite Element Method (FEM) for solving Partial Differential Equations (PDEs)',
         long_description=Path('README.md').read_text(),
         long_description_content_type='text/markdown',
