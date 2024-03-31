@@ -6,12 +6,7 @@ def print_file(file_name: str) -> None:
         print(f.read())
 
 
-def load_data(
-    file_name: str,
-    section_start: str,
-    section_end: str,
-    dtype=float
-) -> np.ndarray:
+def load_data(file_name: str, section_start: str, section_end: str, dtype=float) -> np.ndarray:
     try:
         with open(file_name) as f:
             lines = f.readlines()
@@ -20,7 +15,7 @@ def load_data(
 
     start_index = lines.index(section_start + '\n') + 1
     end_index = lines.index(section_end + '\n', start_index)
-    section = lines[start_index + 1:end_index]
+    section = lines[start_index + 1 : end_index]
     return np.array([line.split()[1:] for line in section], dtype=dtype)
 
 
@@ -56,12 +51,12 @@ def load(mesh_file: str) -> tuple[np.ndarray, np.ndarray]:
 
     start_index = lines.index('$Noeuds\n') + 1
     end_index = lines.index('$FinNoeuds\n', start_index)
-    section = lines[start_index + 1:end_index]
+    section = lines[start_index + 1 : end_index]
     vertices = np.array([line.split()[1:] for line in section], dtype=float)
 
     start_index = lines.index('$Elements\n') + 1
     end_index = lines.index('$FinElements\n', start_index)
-    section = lines[start_index + 1:end_index]
+    section = lines[start_index + 1 : end_index]
     indices = np.array([line.split()[1:] for line in section], dtype=int)
     return vertices, indices
 

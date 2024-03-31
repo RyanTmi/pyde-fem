@@ -1,17 +1,12 @@
 import numpy as np
-
-from scipy.sparse import lil_matrix, csr_matrix
+from scipy.sparse import csr_matrix, lil_matrix
 from scipy.sparse.csgraph import connected_components
 
 from .io import save
 
 
 def generate(
-    file_name: str,
-    h_sub_div: int,
-    v_sub_div: int,
-    h_len: float,
-    v_len: float
+    file_name: str, h_sub_div: int, v_sub_div: int, h_len: float, v_len: float
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Generates a rectangle mesh with specified subdivision parameters and dimensions.
@@ -48,7 +43,7 @@ def generate(
         y = (1 + h_sub_div) * u
         for x in range(y, h_sub_div + y):
             i0, i1, i2, i3 = x, x + 1, x + h_sub_div + 2, x + h_sub_div + 1
-            indices[i:i + 2] = [[i0, i1, i2], [i0, i2, i3]]
+            indices[i : i + 2] = [[i0, i1, i2], [i0, i2, i3]]
             i += 2
 
     save(file_name, vertices, indices)
@@ -67,7 +62,8 @@ def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     Returns
     -------
     boundary_data : tuple[np.ndarray, np.ndarray]
-        Tuple containing arrays of boundary face indices and their corresponding indices in the original array.
+        Tuple containing arrays of boundary face indices and their corresponding indices in the
+        original array.
     """
     edge_x = indices[:, [1, 2, 0]].ravel()
     edge_y = indices[:, [2, 0, 1]].ravel()
@@ -82,7 +78,7 @@ def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return np.array(list(boundary_faces.keys())), np.array(list(boundary_faces.values()))
 
 
-def c_component(indices: np.ndarray) -> np.ndarray:
+def connected_component(indices: np.ndarray) -> np.ndarray:
     """
     Identifies connected components in a mesh.
 
@@ -178,11 +174,11 @@ def refine(vertices: np.ndarray, indices: np.ndarray) -> tuple[np.ndarray, np.nd
                 sub_vertices[(x, y)] = new_indices[j]
                 refined_vertices = np.vstack([refined_vertices, [[x, y]]])
 
-        refined_indices[i * 4:(i + 1) * 4] = [
+        refined_indices[i * 4 : (i + 1) * 4] = [
             [t[0], new_indices[2], new_indices[1]],
             [new_indices[2], new_indices[0], new_indices[1]],
             [t[1], new_indices[0], new_indices[2]],
-            [new_indices[1], new_indices[0], t[2]]
+            [new_indices[1], new_indices[0], t[2]],
         ]
 
     return refined_vertices, refined_indices

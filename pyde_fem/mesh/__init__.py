@@ -1,15 +1,3 @@
-from .geometry import (
-    generate,
-    boundary,
-    c_component,
-    refine,
-)
-
-from .io import (
-    save,
-    load
-)
-
-from .plotting import (
-    plot
-)
+from .geometry import boundary, connected_component, generate, refine
+from .io import load, save
+from .plotting import plot

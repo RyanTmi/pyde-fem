@@ -10,7 +10,7 @@ def plot(
     indices_b: np.ndarray = None,
     cc: np.ndarray = None,
     ccb: np.ndarray = None,
-    values: np.ndarray = None
+    values: np.ndarray = None,
 ) -> None:
     """
     Plots a mesh with optional boundary information and function values.
@@ -53,7 +53,11 @@ def plot(
         for k, c in zip(range(ccb_count), colors_b):
             start_points = vertices[indices_b[ccb == k][:, 0]]
             end_points = vertices[indices_b[ccb == k][:, 1]]
-            plt.plot([start_points[:, 0], end_points[:, 0]],
-                     [start_points[:, 1], end_points[:, 1]], lw=3, c=c)
+            plt.plot(
+                [start_points[:, 0], end_points[:, 0]],
+                [start_points[:, 1], end_points[:, 1]],
+                lw=3,
+                c=c,
+            )
 
     plt.show()
