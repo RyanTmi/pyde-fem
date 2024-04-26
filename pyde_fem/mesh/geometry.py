@@ -97,9 +97,11 @@ def connected_component(indices: np.ndarray) -> np.ndarray:
     if indices.shape[1] == 3:
         rows = indices[:, [0, 1, 2]].ravel()
         cols = indices[:, [1, 2, 0]].ravel()
-    else:  # Assuming that indices.shape[1] == 2
+    elif indices.shape[1] == 2:
         rows = indices[:, 0]
         cols = indices[:, 1]
+    else:
+        raise ValueError("ValueError: indices elements must be 2 or 3 dimensional")
 
     data = np.ones(len(rows), dtype=np.uint8)
     graph = csr_matrix((data, (rows, cols)), shape=(n, n))
