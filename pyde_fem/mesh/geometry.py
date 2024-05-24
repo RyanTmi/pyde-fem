@@ -26,10 +26,8 @@ def generate(
 
     Returns
     -------
-    vertices : np.ndarray
-        Array containing coordinates of mesh vertices.
-    indices : np.ndarray
-        Array containing indices of mesh elements.
+    mesh : tuple[np.ndarray, np.ndarray]
+        Tuple containing coordinates of the generated mesh and indices of mesh element.
     """
     x_vtx = np.linspace(0, h_len, h_sub_div + 1)
     y_vtx = np.linspace(0, v_len, v_sub_div + 1)
@@ -76,6 +74,29 @@ def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
             boundary_faces[(x, y)] = i
 
     return np.array(list(boundary_faces.keys())), np.array(list(boundary_faces.values()))
+
+
+def boundary_normals(vertices: np.ndarray, boundary_indices: np.ndarray) -> np.ndarray:
+    """
+    Compute the normal vectors to the boundary of a domain.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        Array of shape (n, 2) containing coordinates of the mesh elements.
+    boundary_indices
+        Array of shape (m, 2) containing indices of boundary face indices.
+    Returns
+    -------
+    boundary_normals : np.ndarray
+        Array of shape (m, 2) containing the normal vectors of the boundary faces.
+    """
+    boundary_vertices = vertices[boundary_indices]
+    dx = boundary_vertices[:, 1, 0] - boundary_vertices[:, 0, 0]
+    dy = boundary_vertices[:, 1, 1] - boundary_vertices[:, 0, 1]
+    normals = np.column_stack((dy, -dx))
+    norms = np.linalg.norm(normals, axis=1)
+    return normals / norms[:, np.newaxis]
 
 
 def connected_component(indices: np.ndarray) -> np.ndarray:
@@ -154,10 +175,8 @@ def refine(vertices: np.ndarray, indices: np.ndarray) -> tuple[np.ndarray, np.nd
 
     Returns
     -------
-    refined_vertices : np.ndarray
-        Array containing coordinates of refined mesh vertices.
-    refined_indices : np.ndarray
-        Array containing indices of refined mesh elements.
+    mesh : tuple[np.ndarray, np.ndarray]
+        Tuple containing coordinates of the refined mesh and indices of refined mesh element.
     """
     refined_vertices = vertices.copy()
     refined_indices = np.zeros((4 * indices.shape[0], indices.shape[1]), dtype=int)
