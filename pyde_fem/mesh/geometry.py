@@ -1,15 +1,14 @@
 import numpy as np
-from scipy.sparse import csr_matrix, lil_matrix
-from scipy.sparse.csgraph import connected_components
+from scipy.sparse import csgraph, csr_matrix, lil_matrix
 
 from .io import save
 
 
 def generate(
-    file_name: str, h_sub_div: int, v_sub_div: int, h_len: float, v_len: float
+    h_sub_div: int, v_sub_div: int, h_len: float, v_len: float, file_name: str | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Generates a rectangle mesh with specified subdivision parameters and dimensions.
+    Generate a rectangular mesh with specified subdivisions and dimensions, and save it to a file.
 
     Parameters
     ----------
@@ -26,8 +25,32 @@ def generate(
 
     Returns
     -------
-    mesh : tuple[np.ndarray, np.ndarray]
-        Tuple containing coordinates of the generated mesh and indices of mesh element.
+    tuple[np.ndarray, np.ndarray]
+        Tuple containing coordinates of the generated mesh and indices of mesh elements.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> vertices, indices = pf.mesh.generate(2, 2, 1.0, 1.0)
+    >>> vertices
+    array([[0. , 0. ],
+           [0.5, 0. ],
+           [1. , 0. ],
+           [0. , 0.5],
+           [0.5, 0.5],
+           [1. , 0.5],
+           [0. , 1. ],
+           [0.5, 1. ],
+           [1. , 1. ]])
+    >>> indices
+    array([[0, 1, 4],
+           [0, 4, 3],
+           [1, 2, 5],
+           [1, 5, 4],
+           [3, 4, 7],
+           [3, 7, 6],
+           [4, 5, 8],
+           [4, 8, 7]], dtype=uint32)
     """
     x_vtx = np.linspace(0, h_len, h_sub_div + 1)
     y_vtx = np.linspace(0, v_len, v_sub_div + 1)
@@ -44,13 +67,15 @@ def generate(
             indices[i : i + 2] = [[i0, i1, i2], [i0, i2, i3]]
             i += 2
 
-    save(file_name, vertices, indices)
+    if file_name is not None:
+        save(file_name, vertices, indices)
+
     return vertices, indices
 
 
 def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
-    Extracts boundary information from mesh indices.
+    Extract boundary edges from mesh indices.
 
     Parameters
     ----------
@@ -59,9 +84,23 @@ def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
     Returns
     -------
-    boundary_data : tuple[np.ndarray, np.ndarray]
-        Tuple containing arrays of boundary face indices and their corresponding indices in the
+    tuple[np.ndarray, np.ndarray]
+        Tuple containing arrays of boundary edge indices and their corresponding indices in the
         original array.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> indices = np.array([[0, 1, 2], [2, 3, 0], [1, 4, 2]])
+    >>> boundary_edges, boundary_indices = pf.mesh.boundary(indices)
+    >>> boundary_edges
+    array([[0, 1],
+           [1, 4],
+           [4, 2],
+           [2, 3],
+           [3, 0]])
+    >>> boundary_indices
+    array([0, 2, 5, 7, 8])
     """
     edge_x = indices[:, [1, 2, 0]].ravel()
     edge_y = indices[:, [2, 0, 1]].ravel()
@@ -78,18 +117,30 @@ def boundary(indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 def boundary_normals(vertices: np.ndarray, boundary_indices: np.ndarray) -> np.ndarray:
     """
-    Compute the normal vectors to the boundary of a domain.
+    Compute the normal vectors of the boundary edges.
 
     Parameters
     ----------
     vertices : np.ndarray
-        Array of shape (n, 2) containing coordinates of the mesh elements.
-    boundary_indices
-        Array of shape (m, 2) containing indices of boundary face indices.
+        Array of shape (n, 2) containing coordinates of the mesh vertices.
+    boundary_indices : np.ndarray
+        Array of shape (m, 2) containing indices of boundary edges.
+
     Returns
     -------
-    boundary_normals : np.ndarray
-        Array of shape (m, 2) containing the normal vectors of the boundary faces.
+    np.ndarray
+        Array of shape (m, 2) containing the normal vectors of the boundary edges.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> vertices = np.array([[0, 0], [1, 0], [1, 1], [0, 1]])
+    >>> boundary_indices = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])
+    >>> pf.mesh.boundary_normals(vertices, boundary_indices)
+    array([[ 0., -1.],
+           [ 1.,  0.],
+           [ 0.,  1.],
+           [-1.,  0.]])
     """
     boundary_vertices = vertices[boundary_indices]
     dx = boundary_vertices[:, 1, 0] - boundary_vertices[:, 0, 0]
@@ -101,7 +152,7 @@ def boundary_normals(vertices: np.ndarray, boundary_indices: np.ndarray) -> np.n
 
 def connected_component(indices: np.ndarray) -> np.ndarray:
     """
-    Identifies connected components in a mesh.
+    Identify connected components in a mesh based on shared vertices.
 
     Parameters
     ----------
@@ -110,8 +161,15 @@ def connected_component(indices: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    labels: np.ndarray
+    np.ndarray
         Array containing labels for connected components.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> indices = np.array([[0, 1, 2], [0, 2, 3], [4, 5, 6]])
+    >>> pf.mesh.connected_component(indices)
+    array([0, 0, 1])
     """
     n = np.max(indices) + 1
 
@@ -122,17 +180,17 @@ def connected_component(indices: np.ndarray) -> np.ndarray:
         rows = indices[:, 0]
         cols = indices[:, 1]
     else:
-        raise ValueError("ValueError: indices elements must be 2 or 3 dimensional")
+        raise ValueError("Indices elements must be 2 or 3 dimensional")
 
     data = np.ones(len(rows), dtype=np.uint8)
     graph = csr_matrix((data, (rows, cols)), shape=(n, n))
-    _, labels = connected_components(csgraph=graph, directed=False)
+    _, labels = csgraph.connected_components(csgraph=graph, directed=False)
     return labels[indices[:, 0]]
 
 
 def c_component_dual(indices: np.ndarray) -> np.ndarray:
     """
-    Identifies connected components in the dual graph of a mesh.
+    Identify connected components in the dual graph of a mesh.
 
     Parameters
     ----------
@@ -141,8 +199,15 @@ def c_component_dual(indices: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    labels: np.ndarray
-        Array containing labels for connected components.
+    np.ndarray
+        Array containing labels for connected components in the dual graph.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> indices = np.array([[0, 1, 2], [2, 3, 0], [1, 4, 2]])
+    >>> pf.mesh.c_component_dual(indices)
+    array([0, 0, 1], dtype=int32)
     """
     edge_x = indices[:, [1, 2, 0]].ravel()
     edge_y = indices[:, [2, 0, 1]].ravel()
@@ -158,13 +223,13 @@ def c_component_dual(indices: np.ndarray) -> np.ndarray:
         else:
             common_edges[(x, y)] = i // 3
 
-    _, labels = connected_components(csgraph=graph, directed=False)
+    _, labels = csgraph.connected_components(csgraph=graph, directed=False)
     return labels
 
 
 def refine(vertices: np.ndarray, indices: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
-    Refine a mesh by adding midpoints to edges.
+    Refine a mesh by adding midpoints to the edges of each element.
 
     Parameters
     ----------
@@ -175,8 +240,27 @@ def refine(vertices: np.ndarray, indices: np.ndarray) -> tuple[np.ndarray, np.nd
 
     Returns
     -------
-    mesh : tuple[np.ndarray, np.ndarray]
-        Tuple containing coordinates of the refined mesh and indices of refined mesh element.
+    tuple[np.ndarray, np.ndarray]
+        Tuple containing coordinates of the refined mesh and indices of refined mesh elements.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> vertices = np.array([[0, 0], [1, 0], [0, 1]])
+    >>> indices = np.array([[0, 1, 2]])
+    >>> new_vertices, new_indices = pf.mesh.refine(vertices, indices)
+    >>> new_vertices
+    array([[0. , 0. ],
+           [1. , 0. ],
+           [0. , 1. ],
+           [0.5, 0. ],
+           [0.5, 0.5],
+           [0. , 0.5]])
+    >>> new_indices
+    array([[0, 3, 5],
+           [3, 4, 5],
+           [1, 4, 3],
+           [5, 4, 2]])
     """
     refined_vertices = vertices.copy()
     refined_indices = np.zeros((4 * indices.shape[0], indices.shape[1]), dtype=int)

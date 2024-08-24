@@ -2,36 +2,118 @@ import numpy as np
 from scipy.sparse import coo_matrix
 
 
-def mesure(vertices: np.ndarray) -> np.ndarray:
+def _measure(vertices: np.ndarray) -> np.ndarray:
+    """
+    Calculate the measure (area or length) of the element defined by the vertices.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The vertices of the element. Shape must be (n, 2) for 2D or (n, 3) for 3D.
+
+    Returns
+    -------
+    np.ndarray
+        The measure (area for 3D, length for 2D) of the element.
+    """
     if len(vertices.shape) == 2:
         vertices = vertices[np.newaxis, :]
 
-    if vertices.shape[1] == 3:
+    d = vertices.shape[1]
+    if d == 3:
         m = np.cross(vertices[:, 0] - vertices[:, 1], vertices[:, 0] - vertices[:, 2]) / 2.0
-    elif vertices.shape[1] == 2:
+    elif d == 2:
         m = np.linalg.norm(vertices[:, 0] - vertices[:, 1])
     else:
         raise ValueError("vertices must be 2 or 3 dimensional")
+
     return m.ravel()
 
 
 def mass_local(vertices: np.ndarray, element: np.ndarray) -> np.ndarray:
-    n = element.shape[0]
+    """
+    Compute the local mass matrix for an element.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The array of vertices (nodes) coordinates.
+    element : np.ndarray
+        The array of vertex indices defining the element.
+
+    Returns
+    -------
+    np.ndarray
+        The local mass matrix for the element.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> vertices = np.array([[0, 0], [1, 0], [0, 1]])
+    >>> element = np.array([0, 1, 2])
+    >>> pf.mass_local(vertices, element)
+    array([[0.08333333, 0.04166667, 0.04166667],
+           [0.04166667, 0.08333333, 0.04166667],
+           [0.04166667, 0.04166667, 0.08333333]])
+    """
+    n = element.size
     m = np.ones((n, n)) + np.eye(n, n)
-    return m * mesure(vertices[element]) / (6 * (n - 1))
+    return m * _measure(vertices[element]) / (6 * (n - 1))
 
 
 def stiffness_local(vtx: np.ndarray, e: np.ndarray) -> np.ndarray:
+    """
+    Compute the local stiffness matrix for an element.
+
+    Parameters
+    ----------
+    vtx : np.ndarray
+        The array of vertices (nodes) coordinates.
+    e : np.ndarray
+        The array of vertex indices defining the element.
+
+    Returns
+    -------
+    np.ndarray
+        The local stiffness matrix for the element.
+
+    Example
+    -------
+    >>> import pyde_fem as pf
+    >>> vertices = np.array([[0, 0], [1, 0], [0, 1]])
+    >>> element = np.array([0, 1, 2])
+    >>> pf.stiffness_local(vertices, element)
+    array([[  1., -0.5, -0.5],
+           [-0.5,  0.5,  0. ],
+           [-0.5,  0. ,  0.5]])
+    """
     edge_x = np.array(vtx[e[[1, 2, 0]]])
     edge_y = np.array(vtx[e[[2, 0, 1]]])
 
     n = np.cross([0, 0, 1], np.column_stack([edge_x - edge_y, [0, 0, 0]]))[:, :-1]
     ff = n / np.sum((vtx[e] - edge_x) * n, axis=1)[:, np.newaxis]
 
-    return mesure(vtx[e]) * np.dot(ff, ff.T)
+    return _measure(vtx[e]) * np.dot(ff, ff.T)
 
 
 def assemble_global(vertices: np.ndarray, indices: np.ndarray, local) -> coo_matrix:
+    """
+    Assemble the global matrix from the local element matrices.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The array of vertices (nodes) coordinates.
+    indices : np.ndarray
+        The array of elements, each element is a list of vertex indices.
+    local : function
+        The function to compute the local matrix (mass or stiffness).
+
+    Returns
+    -------
+    coo_matrix
+        The assembled global sparse matrix.
+    """
     row = np.zeros(indices.shape[1] ** 2 * indices.shape[0])
     col = np.zeros(indices.shape[1] ** 2 * indices.shape[0])
     data = np.zeros(indices.shape[1] ** 2 * indices.shape[0])
@@ -51,10 +133,40 @@ def assemble_global(vertices: np.ndarray, indices: np.ndarray, local) -> coo_mat
 
 
 def mass(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
+    """
+    Compute the global mass matrix for a given mesh.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The array of vertices (nodes) coordinates.
+    indices : np.ndarray
+        The array of elements, each element is a list of vertex indices.
+
+    Returns
+    -------
+    coo_matrix
+        The global mass matrix in sparse COO format.
+    """
     return assemble_global(vertices, indices, mass_local)
 
 
-def mass_optv(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
+def mass_opt(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
+    """
+    Optimized computation of the global mass matrix for a given mesh.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The array of vertices (nodes) coordinates.
+    indices : np.ndarray
+        The array of elements, each element is a list of vertex indices.
+
+    Returns
+    -------
+    coo_matrix
+        The global mass matrix in sparse COO format.
+    """
     def vec_elem(x: int, y: int, vs: np.ndarray) -> np.ndarray:
         return (1 + (x == y)) * vs / 12.0
 
@@ -67,7 +179,7 @@ def mass_optv(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
     j = np.zeros((d * d, ne))
 
     l = 0
-    sv = mesure(vertices[indices])
+    sv = _measure(vertices[indices])
     for a in range(d):
         for b in range(d):
             k[l, :] = vec_elem(a, b, sv)
@@ -79,4 +191,19 @@ def mass_optv(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
 
 
 def stiffness(vertices: np.ndarray, indices: np.ndarray) -> coo_matrix:
+    """
+    Compute the global stiffness matrix for a given mesh.
+
+    Parameters
+    ----------
+    vertices : np.ndarray
+        The array of vertices (nodes) coordinates.
+    indices : np.ndarray
+        The array of elements, each element is a list of vertex indices.
+
+    Returns
+    -------
+    coo_matrix
+        The global stiffness matrix in sparse COO format.
+    """
     return assemble_global(vertices, indices, stiffness_local)

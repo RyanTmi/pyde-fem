@@ -1,29 +1,19 @@
 from pathlib import Path
+
 from setuptools import setup, find_packages
 
 
 def main() -> None:
     setup(
-        name="pyde_fem",
-        version="0.5.1",
+        name="pyde-fem",
+        version="1.0.0",
+        author="Ryan Timeus",
+        author_email="timeusryan@gmail.com",
         description="Python package for Finite Element Method (FEM) for solving Partial Differential Equations (PDEs)",
         long_description=Path("README.md").read_text(),
         long_description_content_type="text/markdown",
-        url="https://github.com/RyanTmi/pyde_fem",
-        author="Ryan Timeus",
-        author_email="timeusryan@gmail.com",
+        url="https://github.com/RyanTmi/pyde-fem",
         license="Apache License 2.0",
-        project_urls={
-            "Source": "https://github.com/RyanTmi/pyde_fem",
-        },
-        classifiers=[
-            "Development Status :: 3 - Alpha",
-            "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: Apache Software License",
-            "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.10",
-            "Topic :: Scientific/Engineering :: Mathematics",
-        ],
         keywords=[
             "finite element method",
             "partial differential equations",
@@ -35,6 +25,17 @@ def main() -> None:
         packages=find_packages(),
         package_data={"": ["README.md"]},
         include_package_data=True,
+        classifiers=[
+            "Intended Audience :: Science/Research",
+            "Topic :: Scientific/Engineering :: Mathematics",
+            "Operating System :: OS Independent",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
+            "License :: OSI Approved :: Apache Software License",
+        ],
     )
 
 

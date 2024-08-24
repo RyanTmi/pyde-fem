@@ -1,4 +1,4 @@
-graft pyde_fem
+graft pyde-fem
 include pyproject.toml
 include setup.py
 global-exclude *.py[cod]

@@ -18,37 +18,35 @@ def plot(vertices: np.ndarray, indices: np.ndarray, /, **kwargs):
     indices : np.ndarray
         Array of shape (m, 3) representing the indices of the vertices forming triangles.
     kwargs :
-        connected_components : np.ndarray
-            Array of shape (m, 1) representing the connected components of each triangle.
-        boundary_indices : np.ndarray
-            Array of shape (p, 2) representing the indices of the boundaries segments.
-        boundary_connected_components : np.ndarray
+        connected_components : np.ndarray, optional
+            Array of shape (m,) representing the connected components of each triangle.
+        boundary_indices : np.ndarray, optional
+            Array of shape (p, 2) representing the indices of the boundary segments.
+        boundary_connected_components : np.ndarray, optional
             Array of shape (p,) representing the connected components of each boundary segment.
-        boundary_normals : np.ndarray
+        boundary_normals : np.ndarray, optional
             Array of shape (p, 2) representing the normal vectors to the boundary segments.
-        values : np.ndarray
-            Array of shape (n, 1) representing values associated with each vertex for plotting.
+        values : np.ndarray, optional
+            Array of shape (n,) representing values associated with each vertex for plotting.
     """
     fig = plt.figure("Mesh", figsize=(8, 8))
     ax = fig.add_subplot()
 
-    plot_triangles(ax, fig, vertices, indices, **kwargs)
-    plot_boundary(ax, vertices, **kwargs)
+    _plot_triangles(ax, fig, vertices, indices, **kwargs)
+    _plot_boundary(ax, vertices, **kwargs)
 
     ax.set_aspect("equal", adjustable="box")
     ax.margins(0.2)
     fig.show()
 
 
-def plot_triangles(ax, fig, vertices: np.ndarray, indices: np.ndarray, **kwargs):
+def _plot_triangles(ax, fig, vertices: np.ndarray, indices: np.ndarray, **kwargs):
     connected_components = kwargs.get("connected_components", np.zeros(indices.shape[0], dtype=int))
     cc_count = np.max(connected_components) + 1
     colors = plt.colormaps.get_cmap("twilight")(np.linspace(0.2, 1.0, cc_count))
 
     for k, c in zip(range(cc_count), colors):
-        triangulation = mtri.Triangulation(
-            vertices[:, 0], vertices[:, 1], indices[connected_components == k]
-        )
+        triangulation = mtri.Triangulation(vertices[:, 0], vertices[:, 1], indices[connected_components == k])
         values = kwargs.get("values")
         alpha = 1.0
         if values is not None:
@@ -61,12 +59,12 @@ def plot_triangles(ax, fig, vertices: np.ndarray, indices: np.ndarray, **kwargs)
         ax.triplot(triangulation, linewidth=0.5, color=c, alpha=alpha)
 
 
-def plot_boundary(ax, vertices: np.ndarray, **kwargs):
+def _plot_boundary(ax, vertices: np.ndarray, **kwargs):
     boundary_indices = kwargs.get("boundary_indices")
     boundary_normals = kwargs.get("boundary_normals")
     if boundary_indices is None:
         if boundary_normals is not None:
-            raise ValueError("Can not plot boundary normals without boundary indices")
+            raise ValueError("Cannot plot boundary normals without boundary indices")
         return
 
     boundary_connected_components = kwargs.get(
